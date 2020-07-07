@@ -16,7 +16,6 @@ class MailService:
                 ) 
             msg.body = '''verification link : click the link for registration
             http://127.0.0.1:5000/register-email/{}'''.format(token)
-            print(mail)
             mail.send(msg)
             return "check your mail click the link for verification"
         except:

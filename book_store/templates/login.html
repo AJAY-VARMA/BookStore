@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <form action = "#" method = 'post'>
+        <label>User-Name</label>
+        <p> <input type = "text" name = 'name'/></p>
+        <label>Password:</label>
+        <p> <input type = "password" name = 'pswd'/></p>
+        <p> <input type = "submit" value = 'login'/></p>
+        <a href="/register" >Sign-up</a>
+        </form>
+{% endblock %}

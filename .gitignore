@@ -1,0 +1,4 @@
+.vscode/
+bookenv/
+book_store/__pycache__
+book_store/resources/__pycache__

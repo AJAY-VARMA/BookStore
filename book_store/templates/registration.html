@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <form action = "#" method = 'post'>
+        <label>User-Name</label>
+        <p> <input type = "text" name = 'name'/></p>
+        <label>Email</label>
+        <p> <input type = "text" name = 'email'/></p>
+        <label>Password:</label>
+        <p> <input type = "password" name = 'pswd'/></p>
+        <label>ReEnter-Password:</label>
+        <p> <input type = "password" name = 'pswd1'/></p>
+        <p> <input type = "submit" value = 'register'/></p>
+        </form>
+{% endblock %}

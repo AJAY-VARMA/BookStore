@@ -1,5 +1,6 @@
 from flask import Flask
 from dotenv import load_dotenv
+from resources.error_handler import InvalidUsageError
 import os
 app = Flask(__name__)
 
@@ -21,9 +22,14 @@ app.config['MAIL_USE_SSL'] = True
 # print(c)
 
 
-
 app.config['MYSQL_HOST'] = "localhost"
 app.config['MYSQL_USER'] = "root"
 app.config['MYSQL_PASSWORD'] = "1234"
 app.config['MYSQL_DB'] = "bookstore"
-app.config['secret_key'] = "bookstore"
+app.config['secret_key'] = "secretkey"
+
+@app.errorhandler(InvalidUsageError)
+def handle_invalid_usage(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response

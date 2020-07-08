@@ -1,6 +1,7 @@
-from flask import Flask
+from flask import Flask,jsonify
 from dotenv import load_dotenv
 from resources.error_handler import InvalidUsageError
+# from .resources.error_handler import InvalidUsageError
 import os
 app = Flask(__name__)
 

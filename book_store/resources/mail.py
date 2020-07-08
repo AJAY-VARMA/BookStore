@@ -3,6 +3,7 @@ import sys,os
 sys.path.append('.')
 from app import app
 
+from .error_handler import InvalidUsageError
 mail = Mail(app)
 
 class MailService:

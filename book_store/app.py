@@ -1,6 +1,7 @@
 from flask import Flask,jsonify
 from dotenv import load_dotenv
 import os
+from resources.error_handler import InvalidUsageError
 app = Flask(__name__)
 
 load_dotenv('bookenv/.env')
@@ -15,8 +16,8 @@ app.config['secret_key'] = os.getenv("secret_key")
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("connection")
 # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# @app.errorhandler(InvalidUsageError)
-# def handle_invalid_usage(error):
-#     response = jsonify(error.to_dict())
-#     response.status_code = error.status_code
-#     return response
+@app.errorhandler(InvalidUsageError)
+def handle_invalid_usage(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response

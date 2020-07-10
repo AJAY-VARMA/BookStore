@@ -9,21 +9,14 @@ class Login(Resource):
 
     def get(self):
         return make_response(jsonify({"respone" : "get request called for login"}),200)
-        # try:
-        #     return make_response(render_template('login.html'))
-        # except jinja2.exceptions.TemplateNotFound:
-        #     raise InvalidUsageError("template not found",404)
 
     def post(self):
-        # try:
             form = LoginForm(request.form)
             user_name = form.username.data
             password = form.password.data
             if form.validate():
                 return Login.check_db(user_name,password)
-            return make_response(jsonify({"respone" : "validation failed"}),401)
-        # except Exception:
-        #     pass
+            return make_response(jsonify({"respone" : "validation failed enter proper values"}),401)
 
     @staticmethod
     def check_db(user_name,password):

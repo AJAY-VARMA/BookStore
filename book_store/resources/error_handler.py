@@ -8,5 +8,5 @@ class InvalidUsageError(Exception):  # custom exception class
 
     def to_dict(self):
         dict_ = {}
-        dict_['message'] = self.message
+        dict_['response'] = self.message
         return dict_

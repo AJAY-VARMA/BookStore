@@ -1,12 +1,12 @@
 from flask import render_template,make_response,url_for,redirect,jsonify
-# from app  import app
-from book_store.app  import app
+from app  import app
+# from book_store.app  import app
 import jwt,jinja2
 from flask_mysqldb import MySQL
 from .error_handler import InvalidUsageError
-from MySQLdb._exceptions import ProgrammingError,OperationalError
 from flask_sqlalchemy import SQLAlchemy,sqlalchemy
 from sqlalchemy import desc
+from sqlalchemy.exc import IntegrityError,OperationalError,InvalidRequestError,CompileError
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy(app)
@@ -29,21 +29,23 @@ class ProData(db.Model):
 class DataBase:
     @staticmethod
     def sort_books_by_price(value):
-        book_details = ProData.query.order_by(desc("price")).all()
-        if value:
-            book_details = ProData.query.order_by("price").all()
-        return DataBase.to_add_keys(book_details)
+        try:
+            book_details = ProData.query.order_by(desc("price")).all()
+            if value:
+                book_details = ProData.query.order_by("price").all()
+            return DataBase.to_add_keys(book_details)
+        except (InvalidRequestError,OperationalError,CompileError) :
+            raise InvalidUsageError('mysql connection or syntax is improper', 500)
         
-
     @staticmethod
     def search_book(book_id):
-        # try:
+        try:
             book_details = ProData.query.filter_by(author = book_id).all()
             if len(book_details) == 0:
                 book_details = ProData.query.filter_by(title = book_id).all()
             return DataBase.to_add_keys(book_details)
-        # except (ProgrammingError,OperationalError) :
-        #     raise InvalidUsageError('mysql connection or syntax is improper', 500)
+        except (InvalidRequestError,OperationalError) :
+            raise InvalidUsageError('mysql connection or syntax is improper', 500)
 
     @staticmethod
     def to_add_keys(book_details):
@@ -67,32 +69,33 @@ class DataBase:
         try:
             book_details = ProData.query.all()
             return DataBase.to_add_keys(book_details)
-        except (ProgrammingError,OperationalError):
+        except (InvalidRequestError,OperationalError):
             raise InvalidUsageError('mysql connection or syntax is improper', 500)
 
     @staticmethod
-    def add_to_db(user_name,email,password):
+    def add_to_db(user_name,email,password,mail_msg):
         try:
             hashed_password = generate_password_hash(password, method='sha256')
             new_user = User(username= user_name, email=email, password=hashed_password)
             db.session.add(new_user)
             db.session.commit()
-            return make_response(jsonify({'response': "check your mail click the link for verification"}),200)
+            return make_response(jsonify({'response': mail_msg}),200)
         except sqlalchemy.exc.IntegrityError:
-            return make_response(jsonify({'response': "user name or email exists"}),401)
-        # except (ProgrammingError,OperationalError):
-        #     raise InvalidUsageError('mysql connection or syntax is improper', 500)
+            return make_response(jsonify({'response': "user name or email already exists"}),400)
+        except (InvalidRequestError,OperationalError):
+            raise InvalidUsageError('mysql connection or syntax is improper', 500)
 
 
     @staticmethod
     def check_user_in_db(user_name,password):
-        # try:
+        try:
             user = User.query.filter_by(username=user_name).first()
             if user:
                 if check_password_hash(user.password, password):
                    return True
             return False
-        # except (ProgrammingError,OperationalError):
-        #     raise InvalidUsageError('mysql connection or syntax is improper', 500)
+        except (InvalidRequestError,OperationalError):
+            raise InvalidUsageError('mysql connection or syntax is improper', 500)
+            
 
             

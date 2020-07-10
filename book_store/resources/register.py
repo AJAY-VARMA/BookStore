@@ -1,16 +1,10 @@
 from flask_restful import Resource
-from flask import make_response,render_template,request,g,redirect,url_for,jsonify
+from flask import make_response,request,redirect,url_for,jsonify
 import jinja2,jwt,os
 from .mail import MailService
 from .db import DataBase
-from wtforms import Form,StringField,TextAreaField,PasswordField,validators
-from passlib.hash import sha256_crypt
+from wtforms import Form,StringField,PasswordField,validators
 from dotenv import load_dotenv
-from .error_handler import InvalidUsageError
-
-load_dotenv('bookenv/.env')
-secret_key = os.getenv('secret_key')
-mail_user = os.getenv('mail_user')
 
 class Register(Resource):
     def get(self):
@@ -22,12 +16,9 @@ class Register(Resource):
             email =  form.email.data
             password = form.password.data
             if form.validate():
-                token = jwt.encode({'user_name':user_name,'email':email}
-                    ,secret_key).decode('utf-8')
-                mail_msg = MailService.send_mail(token,email,mail_user)
-                # return make_response(jsonify({"respone" : mail_msg}),200)
-                return DataBase.add_to_db(user_name,email,password)
-            return make_response(jsonify({"respone" : "registration failed enter proper details"}),401)
+                mail_msg = MailService.send_mail(user_name,email)
+                return DataBase.add_to_db(user_name,email,password,mail_msg)
+            return make_response(jsonify({"respone" : "enter proper details for registration"}),400)
         
 class RegisterEmail(Resource):
     def get(self,token):

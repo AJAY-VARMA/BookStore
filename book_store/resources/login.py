@@ -16,13 +16,13 @@ class Login(Resource):
             password = form.password.data
             if form.validate():
                 return Login.check_db(user_name,password)
-            return make_response(jsonify({"respone" : "validation failed enter proper values"}),401)
+            return make_response(jsonify({"respone" : "enter proper values for validation"}),400)
 
     @staticmethod
     def check_db(user_name,password):
         present_in_db =  DataBase.check_user_in_db(user_name,password)
         if present_in_db:
-            return make_response(jsonify({"respone" : "login sucess"}),200)
+            return make_response(jsonify({"respone" : "login success"}),200)
             # return redirect(url_for('getbooks'))
         return make_response(jsonify({"respone" : "login failed"}),401)
 

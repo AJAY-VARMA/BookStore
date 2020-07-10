@@ -8,9 +8,13 @@ class Sort(Resource):
 
     def post(self):
         data = request.form['sort_by']
-        value = False
-        if data ==  "LowToHigh":
+        data = data.lower()
+        if data ==  "lowtohigh":
             value = True
+        elif data == "hightolow":
+            value = False
+        else:
+            return make_response(jsonify({"respone" : "enter correct values to sort"}),400)
         sorted_books = DataBase.sort_books_by_price(value)
         return make_response(jsonify({"respone" : sorted_books}),200)
         

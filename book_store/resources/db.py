@@ -1,73 +1,97 @@
-from flask import render_template,make_response,url_for,redirect
-import sys,os
-sys.path.append('.')
-from app  import app
-# from book_store.app  import app
+from flask import render_template,make_response,url_for,redirect,jsonify
+# from app  import app
+from book_store.app  import app
 import jwt,jinja2
 from flask_mysqldb import MySQL
 from .error_handler import InvalidUsageError
 from MySQLdb._exceptions import ProgrammingError,OperationalError
+from flask_sqlalchemy import SQLAlchemy,sqlalchemy
+from sqlalchemy import desc
+from werkzeug.security import generate_password_hash, check_password_hash
 
-mysql = MySQL(app)
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(25), unique=True)
+    email = db.Column(db.String(50), unique=True)
+    password = db.Column(db.String(100))
+
+class ProData(db.Model):
+    Pid = db.Column(db.Integer, primary_key=True)
+    author = db.Column(db.String(50))
+    title = db.Column(db.String(300))
+    image = db.Column(db.String(300))
+    quantity = db.Column(db.Integer)
+    price = db.Column(db.Integer)
+    description = db.Column(db.String(6000))
 
 class DataBase:
     @staticmethod
-    def get_book_data_by_id(book_id):
+    def sort_books_by_price(value):
+        book_details = ProData.query.order_by(desc("price")).all()
+        if value:
+            book_details = ProData.query.order_by("price").all()
+        return DataBase.to_add_keys(book_details)
+        
+
+    @staticmethod
+    def search_book(book_id):
         # try:
-            # book_id = '23'
-            cur = mysql.connection.cursor()
-            query_string = "SELECT * FROM products_data WHERE Pid = %s"
-            cur.execute(query_string, (book_id))
-            books_data = cur.fetchall()
-            cur.close()
-            return books_data
+            book_details = ProData.query.filter_by(author = book_id).all()
+            if len(book_details) == 0:
+                book_details = ProData.query.filter_by(title = book_id).all()
+            return DataBase.to_add_keys(book_details)
         # except (ProgrammingError,OperationalError) :
         #     raise InvalidUsageError('mysql connection or syntax is improper', 500)
 
     @staticmethod
+    def to_add_keys(book_details):
+        book_list = []
+        for each_book in book_details:
+            book_list.append(
+                {
+                "book_id":each_book.Pid,
+                "author" : each_book.author,
+                "title" : each_book.title,
+                "image" : each_book.image,
+                "quantity" : each_book.quantity,
+                "price" : each_book.price,
+                "description":each_book.description
+                }
+            )
+        return book_list
+
+    @staticmethod
     def get_data_from_db():
         try:
-            cur = mysql.connection.cursor()
-            result_value = cur.execute("select * from products_data")
-            user_details = cur.fetchall()
-            cur.close()
-            return user_details
+            book_details = ProData.query.all()
+            return DataBase.to_add_keys(book_details)
         except (ProgrammingError,OperationalError):
             raise InvalidUsageError('mysql connection or syntax is improper', 500)
 
     @staticmethod
     def add_to_db(user_name,email,password):
         try:
-            # user_name = data['user_name']
-            # email =  data['email']
-            # password = data['password']
-            pass_token = jwt.encode({'password':password},app.config['secret_key'])
-            cur = mysql.connection.cursor()
-            cur.execute("INSERT INTO user_data(Username,email,password) VALUES(%s,%s,%s)"
-                ,(user_name,email,pass_token))
-            # mysql.connection.commit()
-            cur.close()
-        except jinja2.exceptions.TemplateNotFound:
-            raise InvalidUsageError("template not found",404)
-        except (ProgrammingError,OperationalError):
-            raise InvalidUsageError('mysql connection or syntax is improper', 500)
+            hashed_password = generate_password_hash(password, method='sha256')
+            new_user = User(username= user_name, email=email, password=hashed_password)
+            db.session.add(new_user)
+            db.session.commit()
+            return make_response(jsonify({'response': "check your mail click the link for verification"}),200)
+        except sqlalchemy.exc.IntegrityError:
+            return make_response(jsonify({'response': "user name or email exists"}),401)
+        # except (ProgrammingError,OperationalError):
+        #     raise InvalidUsageError('mysql connection or syntax is improper', 500)
 
 
     @staticmethod
     def check_user_in_db(user_name,password):
         # try:
-            cur = mysql.connection.cursor()
-            result_value = cur.execute("select * from user_data")
-            user_details = cur.fetchall()
-            for each_user in user_details:
-                data = jwt.decode(each_user[3],app.config['secret_key'])
-                if (each_user[1] == user_name) & (data['password'] == password):
-                    return True
-                    # return redirect(url_for('getbooks'))
-            # return make_response(render_template('login_failed.html'))
+            user = User.query.filter_by(username=user_name).first()
+            if user:
+                if check_password_hash(user.password, password):
+                   return True
             return False
-        # except jinja2.exceptions.TemplateNotFound:
-        #     raise InvalidUsageError("template not found",404)
         # except (ProgrammingError,OperationalError):
         #     raise InvalidUsageError('mysql connection or syntax is improper', 500)
 

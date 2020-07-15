@@ -1,4 +1,6 @@
 .vscode/
 bookenv/
 book_store/__pycache__
-book_store/resources/__pycache__
+book_store/model/__pycache__
+book_store/services/__pycache__
+book_store/views/__pycache__

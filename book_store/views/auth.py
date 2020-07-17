@@ -1,17 +1,15 @@
-from flask_restful import Resource,Api
-from flask import make_response,render_template,request,jsonify,redirect,url_for,session
-from wtforms import Form,StringField,TextAreaField,PasswordField,validators
+from flask_restful import Resource
+from flask import make_response,request,jsonify
 from services.db_services import DataBase
 from services.mail_service import MailService
-import os,jwt
-from services.response import get
+from services.response import *
 from flask_jwt_extended import create_access_token
+from form import RegisterForm,LoginForm
 
 class Login(Resource):
 
     def get(self):
-        # return make_response(jsonify({"respone" : "get request called for login"}),200)
-        return get,200
+        return make_response(get_login[200],200)
 
     def post(self):
         form = LoginForm(request.form)
@@ -22,12 +20,12 @@ class Login(Resource):
             if present_in_db:
                 access_token = create_access_token(identity=user_name)
                 return make_response(jsonify({"respone" : access_token}),200)
-            return make_response(jsonify({"respone" : "login failed"}),401)
+            return make_response(failed_login[401],401)
         return make_response(jsonify({"respone" : form.username.errors+form.password.errors }),400)
 
 class Register(Resource):
     def get(self):
-        return make_response(jsonify({"respone" : "get request called for register"}),200)
+        return make_response(get_register[200],200)
 
     def post(self):
             form = RegisterForm(request.form)
@@ -35,29 +33,14 @@ class Register(Resource):
             email =  form.email.data
             password = form.password.data
             if form.validate():
-                mail_msg = MailService.send_mail(user_name,email)
-                return DataBase.add_to_db(user_name,email,password,mail_msg)
-            return make_response(jsonify({"respone" : "enter proper details for registration"}),400)
+                mail_msg = MailService.send_mail_with_link(user_name,email)
+                return DataBase.add_user_to_db(user_name,email,password,mail_msg)
+            return make_response(validation_msg[400],400)
         
 class RegisterEmail(Resource):
     def get(self,token):
         DataBase.check_token(token)
-        return make_response(jsonify({"respone" : "login sucessfull"}),200)
+        return make_response(login[200],200)
 
 
 
-
-
-
-class RegisterForm(Form):
-    username = StringField('username', [validators.Length(min=4, max=25)])
-    email = StringField('email', [validators.Length(min=6, max=50)])
-    password = PasswordField('password', [
-        validators.Length(min=8, max=50),
-        validators.EqualTo('confirm', message='Passwords do not match')
-    ])
-    confirm = PasswordField('confirm')
-
-class LoginForm(Form):
-    username = StringField('username', [validators.Length(min=4, max=25)])
-    password = PasswordField('password', [validators.Length(min=8, max=50)])

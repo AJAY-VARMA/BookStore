@@ -12,8 +12,25 @@ mail_user = os.getenv('mail_user')
 mail = Mail(app)
 
 class MailService:
+
+    @staticmethod
+    def send_mail_with_order_details(user_details,product_details):
+        products = product_details[:-1]
+        price = product_details[-1]
+        msg = Message( 
+                    'Hello', 
+                    sender = mail_user,
+                    recipients = [user_details[0]]
+                ) 
+        msg.body = '''your order is successfully placed 
+        order id : {}
+        address : {}
+        products : {} 
+        {}'''.format(user_details[1],user_details[2],products,price)
+        mail.send(msg)
+
     @staticmethod 
-    def send_mail(user_name,email):
+    def send_mail_with_link(user_name,email):
         try:
             token = jwt.encode({'email':email}
                     ,secret_key).decode('utf-8')

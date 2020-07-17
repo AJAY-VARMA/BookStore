@@ -20,6 +20,7 @@ class User(db.Model):
     email = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(100))
     confirmed = db.Column(db.Boolean, nullable=False)
+    address = db.relationship('Address',backref = 'user',uselist = False)
 
 class ProductData(db.Model):
     pid = db.Column(db.Integer, primary_key=True)
@@ -31,3 +32,11 @@ class ProductData(db.Model):
     description = db.Column(db.String(6000))
     cart_item = db.relationship('User',secondary = cart_relation,backref = db.backref('cart',lazy = 'dynamic'))
     wishlist_item = db.relationship('User',secondary = wishlist_relation,backref = db.backref('wishlist',lazy = 'dynamic'))
+
+class Address(db.Model):
+    username = db.Column(db.String(25),db.ForeignKey('user.username'),primary_key = True)
+    name =  db.Column(db.String(50))
+    mobilenumber = db.Column(db.BigInteger)
+    orderid = db.Column(db.String(25), unique=True)
+    address = db.Column(db.String(500))
+    pincode = db.Column(db.Integer)

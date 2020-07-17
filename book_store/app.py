@@ -5,16 +5,14 @@ from services.error_handler_service import InvalidUsageError
 app = Flask(__name__)
 
 load_dotenv('bookenv/.env')
-
+ 
 app.config['MAIL_SERVER'] = os.getenv("mail_server")
 app.config['MAIL_PORT'] = os.getenv("mail_port")
 app.config['MAIL_USERNAME'] = os.getenv("mail_user")
 app.config['MAIL_PASSWORD'] = os.getenv("mail_pswd")
 app.config['MAIL_USE_SSL'] = True
 app.config['secret_key'] = os.getenv("secret_key")
-
 app.config['JWT_SECRET_KEY'] = 't1NP63m4wnBg6nyHYKfmc2TpCOGI4nss'
-
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("connection")
 # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

@@ -3,12 +3,23 @@ from services.db_services import DataBase
 from flask import make_response,request,jsonify
 from flask_login import login_required
 from services.response import *
+from flask_restful_swagger import swagger
 
 class GetBooks(Resource):
+
+    @swagger.operation(notes = 'get books')
     def get(self):
         books_data = DataBase.get_books_data_from_db()
         return make_response(jsonify({"books" : books_data}),200)
 
+    @swagger.operation(notes = 'search books',parameters = [
+            {
+              "name": "search",
+              "description": "enter username for the login",
+              "required": True,
+              "type": "string",
+              "paramType": "form"
+            }])
     def post(self):
             book_form = request.form
             search_value = book_form['search']
@@ -18,6 +29,7 @@ class GetBooks(Resource):
             return make_response(search[400],400)
 
 class Sort(Resource):
+    @swagger.operation(notes = 'get books')
     def get(self):
         return make_response(sort[200],200)
 

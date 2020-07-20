@@ -3,9 +3,12 @@ from flask_restful import Api
 from views import Login,Register,RegisterEmail,GetBooks,Sort,Cart,Wishlist,Order,CheckOut
 from app import app
 from flask_jwt_extended import  JWTManager
+from flask_restful_swagger import swagger
 
 api = Api(app)
 jwt = JWTManager(app)
+
+api = swagger.docs(Api(app),apiVersion='3.0',api_spec_url='/docs')
 
 api.add_resource(Login,'/login')
 api.add_resource(Register,'/register')

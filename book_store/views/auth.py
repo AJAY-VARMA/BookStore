@@ -5,12 +5,31 @@ from services.mail_service import MailService
 from services.response import *
 from flask_jwt_extended import create_access_token
 from form import RegisterForm,LoginForm
+from flasgger.utils import swag_from
+from flask_restful_swagger import swagger
 
 class Login(Resource):
-
+    
+    @swagger.operation(notes = 'get login page')
     def get(self):
         return make_response(get_login[200],200)
 
+    @swagger.operation(notes = 'post login page',parameters = [
+            {
+              "name": "username",
+              "description": "enter username for the login",
+              "required": True,
+              "type": "string",
+              "paramType": "form"
+            },
+            {
+              "name": "password",
+              "description": "enter password for the login",
+              "required": True,
+              "type": "string",
+              "paramType": "form"
+            }
+          ])
     def post(self):
         form = LoginForm(request.form)
         user_name = form.username.data

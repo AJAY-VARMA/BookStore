@@ -1,5 +1,4 @@
 from flask_mail import Message,Mail
-from app import app
 from flask import render_template
 from .error_handler_service import InvalidUsageError
 import os,jwt
@@ -9,8 +8,7 @@ load_dotenv('bookenv/.env')
 secret_key = os.getenv('secret_key')
 mail_user = os.getenv('mail_user')
 host = os.getenv('host')
-mail = Mail(app)
-
+mail = Mail()
 class MailService:
 
     @staticmethod
@@ -18,7 +16,7 @@ class MailService:
         products = product_details[:-1]
         price = product_details[-1]
         msg = Message( 
-                    'Hello', 
+                    'From Books Store', 
                     sender = mail_user,
                     recipients = [user_details[0]]
                 ) 

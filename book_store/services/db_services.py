@@ -6,10 +6,9 @@ from sqlalchemy import desc
 from sqlalchemy.exc import *
 from sqlalchemy.orm.exc import *
 from werkzeug.security import generate_password_hash, check_password_hash
-import os,jwt
+import os,jwt,random
 from dotenv import load_dotenv
 from .response import *
-import random
 
 load_dotenv('bookenv/.env')
 secret_key = os.getenv('secret_key')
@@ -45,16 +44,17 @@ class DataBase:
                 "title" : each_book["title"],
                 "price" : each_book["price"],
                 "quantity" : each_book["quantity"],
+                "image" : each_book["image"]
                 }
             )
         return book_list
 
     @staticmethod
-    def add_to_address_db(username,name,mobile_number,address,pincode):
+    def add_to_order_db(username,mobile_number,address):
         try:
             order_id = random.randint(1000,100000)
-            address = OrderData(username= username,mobilenumber = mobile_number, orderid = order_id,address = address)
-            db.session.add(address)
+            order = OrderData(username= username,mobilenumber = mobile_number, orderid = order_id,address = address)
+            db.session.add(order)
             db.session.commit()
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)
@@ -83,6 +83,17 @@ class DataBase:
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)
 
+    @staticmethod
+    def remove_from_cart(user_name,book_id):
+        try:
+            user = User.query.filter_by(username = user_name).first()
+            book_data = ProductData.query.filter_by(pid = book_id).first()
+            user.cart.remove(book_data)
+            db.session.commit()
+            return cart_del[200]
+        except (InvalidRequestError,OperationalError):
+            raise InvalidUsageError(sql[500], 500)  
+         
     @staticmethod
     def check_token(token):
         try:
@@ -126,6 +137,21 @@ class DataBase:
         except (InvalidRequestError,OperationalError,CompileError):
             raise InvalidUsageError(sql[500], 500)
     
+    @staticmethod
+    def change_products_quantity_in_db():
+        global books_data
+        try:
+            list_of_books = books_data[:-1]
+            for each_book in list_of_books:
+                quantity = each_book['quantity']
+                book_id = each_book['book_id']
+                book_data = ProductData.query.filter_by(pid = book_id).first()
+                book_data.quantity = book_data.quantity - quantity
+                db.session.commit()
+        except (InvalidRequestError,OperationalError,CompileError):
+            raise InvalidUsageError(sql[500], 500)
+
+            
     @staticmethod
     def update_cart(user_name,product_id,quantity):
         global books_data

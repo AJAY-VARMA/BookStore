@@ -1,6 +1,6 @@
 from flask_mail import Message,Mail
 from app import app
-# from book_store.app  import app
+from flask import render_template
 from .error_handler_service import InvalidUsageError
 import os,jwt
 from dotenv import load_dotenv
@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv('bookenv/.env')
 secret_key = os.getenv('secret_key')
 mail_user = os.getenv('mail_user')
-
+host = os.getenv('host')
 mail = Mail(app)
 
 class MailService:
@@ -22,11 +22,7 @@ class MailService:
                     sender = mail_user,
                     recipients = [user_details[0]]
                 ) 
-        msg.body = '''your order is successfully placed 
-        order id : {}
-        address : {}
-        products : {} 
-        {}'''.format(user_details[1],user_details[2],products,price)
+        msg.html = render_template('email.html',user = user_details,products = products,price = price)
         mail.send(msg)
 
     @staticmethod 
@@ -40,7 +36,7 @@ class MailService:
                     recipients = [email]
                 ) 
             msg.body = '''verification link : click the link for registration
-            http://127.0.0.1:5000/register-email/{}'''.format(token)
+            {}'''.format((host+token))
             mail.send(msg)
             return "check your mail click the link for verification"
         except (NameError,AssertionError):

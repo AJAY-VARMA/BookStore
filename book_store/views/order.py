@@ -15,17 +15,16 @@ class Order(Resource):
     def post(self):
         customer = request.form
         username = get_jwt_identity()
-        name = customer['name']
         mobile_number = customer['mobilenumber']
         address = customer['address']
-        pincode= customer['pincode']
-        DataBase.add_to_order_db(username,name,mobile_number,address,pincode)
+        DataBase.add_to_order_db(username,mobile_number,address)
         return make_response(order_post[200],200)
 
 class CheckOut(Resource):
     @jwt_required
     def post(self):
         username = get_jwt_identity()
+        DataBase.change_products_quantity_in_db()
         user_details,product_details = DataBase.get_user_details(username)
         MailService.send_mail_with_order_details(user_details,product_details)
         return make_response(checkout[200],200)

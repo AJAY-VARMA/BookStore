@@ -5,6 +5,7 @@ get_register = {200 : "get request called for register"}
 validation_msg = {400 : "enter proper details for registration"}
 cart = {200:"added to cart",400 : "product id is not available"}
 wishlist = { 200 : "added to wishlist",400 : "product id is invalid" }
+cart_del = {200: "iteam is deleted"}
 search = {400:"the book u typed is not available"}
 sort = {200 : "get request called for sort",400 : "enter correct values to sort"}
 sql = {500 : 'mysql connection or syntax is improper'}

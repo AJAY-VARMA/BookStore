@@ -12,7 +12,6 @@ from flask_restful import Api
 from flask_redis import FlaskRedis
 
 
-
 app = Flask(__name__)
 api = Api(app)
 jwt = JWTManager(app)

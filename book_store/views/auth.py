@@ -7,7 +7,6 @@ from flask_jwt_extended import create_access_token
 from form import RegisterForm,LoginForm
 from flasgger.utils import swag_from
 from flask_restful_swagger import swagger
-
 class Login(Resource):
     
     @swagger.operation(notes = 'get login page')

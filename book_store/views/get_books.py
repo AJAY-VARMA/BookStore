@@ -21,12 +21,11 @@ class GetBooks(Resource):
               "paramType": "form"
             }])
     def post(self):
-            book_form = request.form
-            search_value = book_form['search']
-            product_data = DataBase.search_book(search_value)
-            if len(product_data) > 0:
-                return make_response(jsonify({"books" : product_data}),200)
-            return make_response(search[400],400)
+        search_value = request.args.get('search')
+        product_data = DataBase.search_book(search_value)
+        if len(product_data) > 0:
+            return make_response(jsonify({"books" : product_data}),200)
+        return make_response(search[400],400)
 
 class Sort(Resource):
     @swagger.operation(notes = 'get books')
@@ -34,7 +33,7 @@ class Sort(Resource):
         return make_response(sort[200],200)
 
     def post(self):
-        data = request.form['sort_by']
+        data = request.args.get('value')
         data = data.lower()
         if data ==  "lowtohigh":
             value = True

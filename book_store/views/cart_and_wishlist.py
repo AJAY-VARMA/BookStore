@@ -26,8 +26,16 @@ class Cart(Resource):
         data =  request.form
         user_name = get_jwt_identity()
         product_id = data['productid']
-        DataBase.add_to_cart(user_name,product_id)
-        return make_response(cart[200],200)
+        msg = DataBase.add_to_cart(user_name,product_id)
+        return make_response(msg,200)
+
+    @jwt_required
+    def delete(self):
+        data =  request.form
+        user_name = get_jwt_identity()
+        product_id = data['productid']
+        DataBase.remove_from_cart(user_name,product_id)
+        return make_response(cart_delete[200],200)
 
     @jwt_required
     def put(self):

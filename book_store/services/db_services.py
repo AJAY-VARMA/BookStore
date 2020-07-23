@@ -74,6 +74,8 @@ class DataBase:
             db.session.commit()
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)
+        except sqlalchemy.exc.IntegrityError:
+            raise InvalidUsageError(order_post[400],400)
 
     @staticmethod
     def display_wishlist(user_name):
@@ -85,10 +87,10 @@ class DataBase:
             for each_book in user.wishlist:
                 list_of_books.append(each_book)
             books_with_keys = DataBase.to_add_keys(list_of_books)
-            time.sleep(5)
+            # time.sleep(5)
             json_books = json.dumps(books_with_keys)
             redis.set(name = 'items',value = json_books)
-            redis.expire('items' ,10)
+            redis.expire('items' ,1000)
             return books_with_keys
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)

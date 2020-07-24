@@ -4,23 +4,17 @@ from services.db_services import DataBase
 from flask_jwt_extended import jwt_required,get_jwt_identity
 from services.response import *
 from flask_restful_swagger import swagger
+from swag import jwt,product,quantity
 
 class Cart(Resource):
-    swagger.operation(notes = 'get cart',parameters = [
-            {
-              "name": "Authorization",
-              "description": "jwt token for the wishlist",
-              "required": True,
-              "type": "string",
-              "paramType": "header"
-            }]
-            )
+    @swagger.operation(notes = 'get cart',parameters = jwt)
     @jwt_required
     def get(self):
         user_name = get_jwt_identity()
         books_in_cart = DataBase.display_cart(user_name)
         return make_response(jsonify({"respone" : books_in_cart}),200)
 
+    @swagger.operation(notes = 'post wishlist',parameters = product)
     @jwt_required
     def post(self):
         data =  request.form
@@ -29,6 +23,7 @@ class Cart(Resource):
         msg = DataBase.add_to_cart(user_name,product_id)
         return make_response(msg,200)
 
+    @swagger.operation(notes = 'post wishlist',parameters = product)
     @jwt_required
     def delete(self):
         data =  request.form
@@ -37,6 +32,7 @@ class Cart(Resource):
         DataBase.remove_from_cart(user_name,product_id)
         return make_response(cart_delete[200],200)
 
+    @swagger.operation(notes = 'post wishlist',parameters = quantity)
     @jwt_required
     def put(self):
         data =  request.form
@@ -47,36 +43,14 @@ class Cart(Resource):
         return make_response(jsonify({"respone" : books_in_cart}),status_code)
 
 class Wishlist(Resource):
-    @swagger.operation(notes = 'get wishlist',parameters = [
-            {
-              "name": "Authorization",
-              "description": "jwt token for the wishlist",
-              "required": True,
-              "type": "string",
-              "paramType": "header"
-            }]
-            )
+    @swagger.operation(notes = 'get wishlist',parameters = jwt)
     @jwt_required
     def get(self):
         user_name = get_jwt_identity()
         books_data = DataBase.display_wishlist(user_name)
         return make_response(jsonify({"respone" : books_data}),200)
 
-    @swagger.operation(notes = 'post wishlist',parameters = [
-            {
-              "name": "Authorization",
-              "description": "jwt token for the wishlist",
-              "required": True,
-              "type": "string",
-              "paramType": "header"
-            },{
-              "name": "productid",
-              "description": "product id to add to wishlist",
-              "required": True,
-              "type": "string",
-              "paramType": "form"
-            }]
-            )
+    @swagger.operation(notes = 'post wishlist',parameters = product)
     @jwt_required
     def post(self):
         data = request.form

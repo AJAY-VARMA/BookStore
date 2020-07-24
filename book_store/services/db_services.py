@@ -20,8 +20,8 @@ books_data = []
 class DataBase:
     @staticmethod
     def change_products_quantity_in_db():
-        global books_data
         try:
+            books_data = json.loads(redis.get('books_data'))
             list_of_books = books_data[:-1]
             for each_book in list_of_books:
                 quantity = each_book['quantity']
@@ -31,20 +31,36 @@ class DataBase:
                 db.session.commit()
         except (InvalidRequestError,OperationalError,CompileError):
             raise InvalidUsageError(sql[500], 500)
+
+    @staticmethod
+    def add_order(username):
+        try:
+            books_data = json.loads(redis.get('books_data'))
+            list_of_books = books_data[-1]
+            total_price = list_of_books['total-Price']
+            user = User.query.filter_by(username = username).first()
+            order_id = random.randint(1000,100000)
+            address = UserAddress.query.filter_by(user_id = user.id).first()
+            order = OrderData(user_id= user.id,address_id = address.address_id,orderid = order_id,total_price = total_price)
+            db.session.add(order)
+            db.session.commit()
+        except (InvalidRequestError,OperationalError,CompileError):
+            raise InvalidUsageError(sql[500], 500)
     
     @staticmethod
     def get_user_details(username):
-        global books_data
         try:
+            books_data = json.loads(redis.get('books_data'))
             user = User.query.filter_by(username = username).first()
-            user_details =  OrderDetails.query.filter_by(username = username).first()
+            address = UserAddress.query.filter_by(user_id = user.id).first()
+            order = OrderData.query.filter_by(user_id = user.id).first()
             list_of_books = books_data[:-1]
             books =  DataBase.add_keys(list_of_books)
             price = DataBase.calculate_price(books)
             books.append({"total-Price" : price})
             user_mail = user.email
-            order_id = user_details.orderid
-            address = user_details.address
+            order_id = order.orderid
+            address = address.address
             list_of_details = [user_mail,order_id,address]
             return list_of_details,books
         except (InvalidRequestError,OperationalError):
@@ -66,11 +82,11 @@ class DataBase:
         return book_list
 
     @staticmethod
-    def add_to_order_db(username,mobile_number,address):
+    def add_to_address_db(username,name,mobile_number,address,pincode):
         try:
-            order_id = random.randint(1000,100000)
-            order = OrderDetails(username= username,mobilenumber = mobile_number, orderid = order_id,address = address)
-            db.session.add(order)
+            user = User.query.filter_by(username = username).first()
+            address = UserAddress(user_id= user.id,name = name,mobilenumber = mobile_number,address = address,pincode = pincode)
+            db.session.add(address)
             db.session.commit()
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)
@@ -87,10 +103,9 @@ class DataBase:
             for each_book in user.wishlist:
                 list_of_books.append(each_book)
             books_with_keys = DataBase.to_add_keys(list_of_books)
-            # time.sleep(5)
             json_books = json.dumps(books_with_keys)
             redis.set(name = 'items',value = json_books)
-            redis.expire('items' ,1000)
+            redis.expire('items' ,(2*60*60))
             return books_with_keys
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)
@@ -102,6 +117,7 @@ class DataBase:
             book_data = ProductData.query.filter_by(pid = book_id).first()
             user.wishlist.append(book_data)
             db.session.commit()
+            redis.delete('items')
             return wishlist[200]
         except FlushError :
             raise InvalidUsageError(wishlist[400], 400)
@@ -149,12 +165,12 @@ class DataBase:
 
     @staticmethod
     def update_cart(user_name,product_id,quantity):
-        global books_data
         is_product_present = False
         try:
             book_data = ProductData.query.filter_by(pid = product_id).first()
             if book_data.quantity < quantity:
                 return cart_quantity[400],400
+            books_data = json.loads(redis.get('books_data'))
             list_of_books = books_data[:-1]
             for each_book in list_of_books:
                 if each_book['book_id'] == product_id:
@@ -164,7 +180,9 @@ class DataBase:
                     each_book["price"] = price * quantity
             price = DataBase.calculate_price(list_of_books)
             list_of_books.append({"total-Price" : price})
-            books_data = list_of_books
+            json_books = json.dumps(list_of_books)
+            redis.set(name = 'books_data',value = json_books)
+            redis.expire('books_data' ,(24*60*60))
             if is_product_present:
                 return list_of_books,200
             return cart[400],400
@@ -173,8 +191,9 @@ class DataBase:
 
     @staticmethod
     def display_cart(user_name):
-        global books_data
         try:
+            if redis.exists("books_data"):
+                return json.loads(redis.get('books_data'))
             user = User.query.filter_by(username = user_name).first()
             list_of_books = DataBase.get_list_of_books(user)
             books =  DataBase.to_add_keys(list_of_books)
@@ -182,11 +201,13 @@ class DataBase:
                 each_book["quantity"] = 1
             price = DataBase.calculate_price(books)
             books.append({"total-Price" : price})
-            books_data = books
+            json_books = json.dumps(books)
+            redis.set(name = 'books_data',value = json_books)
+            redis.expire('books_data' ,(24*60*60))
             return books
         except (InvalidRequestError,OperationalError,CompileError):
             raise InvalidUsageError(sql[500], 500)
-    
+
     @staticmethod
     def add_to_cart(user_name,book_id):
         try:
@@ -195,6 +216,7 @@ class DataBase:
             if book_data.quantity > 0:
                 user.cart.append(book_data)
                 db.session.commit()
+                redis.delete('books_data')
                 return cart[200]
             return cart[400]
         except FlushError:
@@ -248,8 +270,14 @@ class DataBase:
     @staticmethod
     def get_books_data_from_db():
         try:
+            if redis.exists("books"):
+                return json.loads(redis.get('books'))
             books_data = ProductData.query.all()
-            return DataBase.to_add_keys(books_data)
+            books_with_keys =  DataBase.to_add_keys(books_data)
+            json_books = json.dumps(books_with_keys)
+            redis.set(name = 'books',value = json_books)
+            redis.expire('books' ,(2*60*60))
+            return books_with_keys
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)
 

@@ -4,6 +4,7 @@ from flask import make_response,request,jsonify
 from flask_login import login_required
 from services.response import *
 from flask_restful_swagger import swagger
+from swag import search,sort
 
 class GetBooks(Resource):
 
@@ -12,14 +13,7 @@ class GetBooks(Resource):
         books_data = DataBase.get_books_data_from_db()
         return make_response(jsonify({"books" : books_data}),200)
 
-    @swagger.operation(notes = 'search books',parameters = [
-            {
-              "name": "search",
-              "description": "enter username for the login",
-              "required": True,
-              "type": "string",
-              "paramType": "form"
-            }])
+    @swagger.operation(notes = 'search books',parameters = search)
     def post(self):
         search_value = request.args.get('search')
         product_data = DataBase.search_book(search_value)
@@ -32,6 +26,7 @@ class Sort(Resource):
     def get(self):
         return make_response(sort[200],200)
 
+    @swagger.operation(notes = 'search books',parameters = sort)
     def post(self):
         data = request.args.get('value')
         data = data.lower()

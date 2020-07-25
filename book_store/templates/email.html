@@ -3,6 +3,8 @@
         <title> </title>
         <body>
             <h1>order placed successfully</h1>
+            <h2>address : {{ user[2]}}</h2>
+            <h2>order id : {{ user[1]}}</h2>
             {% for each_product in products %}
                 <img src = {{ each_product['image']}} height="100" width="100"><br align = "left">
                 title : {{ each_product['title']}}<br>
@@ -11,8 +13,6 @@
                 quantity : {{ each_product['quantity']}}<br>
             {% endfor %}
             <h2>total price : {{ price['total-Price'] }}</h2>
-            <h2>order id : {{ user[1]}}</h2>
-            <h2>address : {{ user[2]}}</h2>
         </body>
     </head>
 </html>

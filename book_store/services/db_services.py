@@ -15,7 +15,6 @@ redis = FlaskRedis()
 
 load_dotenv('bookenv/.env')
 secret_key = os.getenv('secret_key')
-books_data = []
 
 class DataBase:
     @staticmethod
@@ -192,8 +191,6 @@ class DataBase:
     @staticmethod
     def display_cart(user_name):
         try:
-            if redis.exists("books_data"):
-                return json.loads(redis.get('books_data'))
             user = User.query.filter_by(username = user_name).first()
             list_of_books = DataBase.get_list_of_books(user)
             books =  DataBase.to_add_keys(list_of_books)
@@ -311,6 +308,4 @@ class DataBase:
             return False
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)
-            
-
             

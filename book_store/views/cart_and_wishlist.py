@@ -14,7 +14,7 @@ class Cart(Resource):
         books_in_cart = DataBase.display_cart(user_name)
         return make_response(jsonify({"respone" : books_in_cart}),200)
 
-    @swagger.operation(notes = 'post wishlist',parameters = product)
+    @swagger.operation(notes = 'post cart',parameters = product)
     @jwt_required
     def post(self):
         data =  request.form
@@ -23,7 +23,7 @@ class Cart(Resource):
         msg = DataBase.add_to_cart(user_name,product_id)
         return make_response(msg,200)
 
-    @swagger.operation(notes = 'post wishlist',parameters = product)
+    @swagger.operation(notes = 'delete cart',parameters = product)
     @jwt_required
     def delete(self):
         data =  request.form
@@ -32,7 +32,7 @@ class Cart(Resource):
         DataBase.remove_from_cart(user_name,product_id)
         return make_response(cart_delete[200],200)
 
-    @swagger.operation(notes = 'post wishlist',parameters = quantity)
+    @swagger.operation(notes = 'put cart',parameters = quantity)
     @jwt_required
     def put(self):
         data =  request.form

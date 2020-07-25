@@ -19,16 +19,16 @@ class GetBooks(Resource):
         product_data = DataBase.search_book(search_value)
         if len(product_data) > 0:
             return make_response(jsonify({"books" : product_data}),200)
-        return make_response(search[400],400)
+        return make_response(search_response[400],400)
 
 class Sort(Resource):
-    @swagger.operation(notes = 'get books')
+    @swagger.operation(notes = 'get sort')
     def get(self):
         return make_response(sort[200],200)
 
-    @swagger.operation(notes = 'search books',parameters = sort)
+    @swagger.operation(notes = 'post sort',parameters = sort)
     def post(self):
-        data = request.args.get('value')
+        data = request.args.get('sort')
         data = data.lower()
         if data ==  "lowtohigh":
             value = True

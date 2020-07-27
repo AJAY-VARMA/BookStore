@@ -5,7 +5,7 @@ class RegisterForm(Form):
     email = StringField('email', [validators.Length(min=6, max=50)])
     password = PasswordField('password', [
         validators.Length(min=8, max=50),
-        validators.EqualTo('confirm', message='Passwords do not match')
+        validators.EqualTo('confirm')
     ])
     confirm = PasswordField('confirm')
 

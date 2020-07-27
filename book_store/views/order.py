@@ -10,11 +10,6 @@ from swag import jwt,order
 
 class Order(Resource):
 
-    @swagger.operation(notes = 'get order',parameters = jwt)
-    @jwt_required
-    def get(self):
-        return make_response(order[200],200)
-
     @swagger.operation(notes = 'post order',parameters = order)
     @jwt_required
     def post(self):
@@ -25,7 +20,7 @@ class Order(Resource):
         address = customer['address']
         pincode = customer['pincode']
         DataBase.add_to_address_db(username,name,mobile_number,address,pincode)
-        return make_response(order_post[200],200)
+        return make_response(response["order"],200)
 
 class CheckOut(Resource):
     @swagger.operation(notes = 'post checkout',parameters = jwt)
@@ -36,4 +31,4 @@ class CheckOut(Resource):
         DataBase.add_order(username)
         user_details,product_details = DataBase.get_user_details(username)
         MailService.send_mail_with_order_details(user_details,product_details)
-        return make_response(checkout[200],200)
+        return make_response(response["checkout"],200)

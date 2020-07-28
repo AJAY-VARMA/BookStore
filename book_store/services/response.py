@@ -1,16 +1,78 @@
-get_login = {200 : "get request called for login"}
-failed_login = {401: "post request login failed"}
-login = {200: "login sucessfull",401: "user name or email already exists"}
-get_register = {200 : "get request called for register"}
-validation_msg = {400 : "enter proper details for registration"}
-cart = {200:"added to cart",400 : "product id is not available"}
-cart_delete = {200: "deleted from the cart"}
-wishlist = { 200 : "added to wishlist",400 : "product id is invalid" }
-cart_del = {200: "iteam is deleted"}
-search = {400:"the book u typed is not available"}
-cart_quantity = {400:"product with quantity u entered is not available"}
-sort = {200 : "get request called for sort",400 : "enter correct values to sort"}
-sql = {500 : 'mysql connection or syntax is improper'}
-order = {200 : "get order method is called"}
-order_post = {200 : "added data into db", 400 : "address already present plz checkout"}
-checkout = {200: "order placed successfully"}
+login_response = {
+    401 : {
+        "message" : "USER_NAME OR PASSWORD INCORRECT",
+        "status" : 401
+    },
+    400 : {
+        "message" : "PLEASE ENTER USERNAME[4-25] AND PASSWORD[8-50] CHARACTERS",
+        "status" :400
+    },
+    411:{
+        "message" : "PLEASE VERIFY YOUR EMAIL AND LINK THE LINK FOR REGISTRATION",
+        "status" :411
+    },
+    413:{
+        "message" : "PLEASE LOGIN FIRST",
+        "status" :413
+    }
+}
+
+registration_response = {
+    200 : {
+        "message" : "VERIFICATION LINK SEND TO YOUR MAIL",
+        "status" : 200
+    },
+    400 : {
+        "message" : "PLEASE ENTER USERNAME[4-25] AND PASSWORD[8-50] EMAIL[6-50] CHARACTERS",
+        "status" :400
+    },
+    409 : {
+        "message" : "USER_NAME OR PASSWORD ALREADY EXISTS",
+        "status" : 409
+    },
+    "success": {
+        "message" : "REGISTRATION SUCCESSFUL PLEASE LOGIN",
+        "status" : 200
+    }
+}
+
+response = {
+    "added": {
+        "message" : "PRODUCT IS ADDED",
+        "status" : 200
+    },
+    "search":{
+        "message" : "ENTER PROPER SEARCH VALUE",
+        "status" : 400
+    },
+    "sort" : {
+        "message" : "ENTER PROPER SORT VALUE",
+        "status" : 400
+    },
+    400 : {
+        "message" : "PRODUCT YOU GIVEN IS NOT AVAILABLE",
+        "status" : 400
+    },
+    200 : {
+        "message" : "PRODUCT IS NOT AVAILABLE RIGHT NOW",
+        "status" : 200
+    },
+    "deleted" : {
+        "message" :"PRODUCT YOU GIVEN IS DELETED",
+        "status" : 200
+    },
+    "order" :{
+        "message" : "ADDED ADDRESS TO DATABASE SUCCESSFULLY ",
+        "status" : 200
+    },
+    "checkout" : {
+        "message" : "ORDER PLACED SUCCESSFULLY ",
+        "status" : 200
+    }
+}
+
+sql = {500 : 'MYSQL CONNECTION OR SYNTAX IS IMPROPER'}
+redis_error = {500 : 'REDIS CONNECTION OR KEY IS IMPROPER'}
+mail_error = {500 : 'ERROR IN MY MAIL SERVICE'}
+update_error = {400 : "ENTER PROPER VALUE FOR QUANTITY OR PRODUCTS ID"}
+twilio = {500 : "CREDENTIALS ARE IMPROPER"}

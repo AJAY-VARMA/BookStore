@@ -8,8 +8,11 @@ from sqlalchemy.orm.exc import *
 from werkzeug.security import generate_password_hash, check_password_hash
 import os,jwt,random,json,time
 from dotenv import load_dotenv
+from .mail_service import MailService
 from .response import *
+from .data import order_max,order_min
 from flask_redis import FlaskRedis
+from redis.exceptions import ConnectionError
 
 redis = FlaskRedis()
 
@@ -28,8 +31,11 @@ class DataBase:
                 book_data = ProductData.query.filter_by(pid = book_id).first()
                 book_data.quantity = book_data.quantity - quantity
                 db.session.commit()
+                redis.delete('books')
         except (InvalidRequestError,OperationalError,CompileError):
             raise InvalidUsageError(sql[500], 500)
+        except (ConnectionError,TypeError):
+            raise InvalidUsageError(redis_error[500],500)
 
     @staticmethod
     def add_order(username):
@@ -38,20 +44,22 @@ class DataBase:
             list_of_books = books_data[-1]
             total_price = list_of_books['total-Price']
             user = User.query.filter_by(username = username).first()
-            order_id = random.randint(1000,100000)
+            order_id = random.randint(order_min,order_max)
             address = UserAddress.query.filter_by(user_id = user.id).first()
             order = OrderData(user_id= user.id,address_id = address.address_id,orderid = order_id,total_price = total_price)
             db.session.add(order)
             db.session.commit()
-        except (InvalidRequestError,OperationalError,CompileError):
+        except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)
+        except (ConnectionError,TypeError):
+            raise InvalidUsageError(redis_error[500],500)
     
     @staticmethod
     def get_user_details(username):
         try:
             books_data = json.loads(redis.get('books_data'))
             user = User.query.filter_by(username = username).first()
-            address = UserAddress.query.filter_by(user_id = user.id).first()
+            address_data = UserAddress.query.filter_by(user_id = user.id).first()
             order = OrderData.query.filter_by(user_id = user.id).first()
             list_of_books = books_data[:-1]
             books =  DataBase.add_keys(list_of_books)
@@ -59,9 +67,10 @@ class DataBase:
             books.append({"total-Price" : price})
             user_mail = user.email
             order_id = order.orderid
-            address = address.address
+            address = address_data.address
             list_of_details = [user_mail,order_id,address]
-            return list_of_details,books
+            details_to_send_msg = [order_id,address_data.mobilenumber,price]
+            return list_of_details,books,details_to_send_msg
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)
 
@@ -108,6 +117,8 @@ class DataBase:
             return books_with_keys
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)
+        except (ConnectionError,TypeError):
+            raise InvalidUsageError(redis_error[500],500)
 
     @staticmethod
     def add_to_wishlist(user_name,book_id):
@@ -117,9 +128,9 @@ class DataBase:
             user.wishlist.append(book_data)
             db.session.commit()
             redis.delete('items')
-            return wishlist[200]
+            return cart_response["added"]
         except FlushError :
-            raise InvalidUsageError(wishlist[400], 400)
+            raise InvalidUsageError(cart_response[400], 400)
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)
 
@@ -158,14 +169,18 @@ class DataBase:
             book_data = ProductData.query.filter_by(pid = book_id).first()
             user.cart.remove(book_data)
             db.session.commit()
-            return cart_del[200]
+            redis.delete('books_data')
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)  
+        except (ConnectionError):
+            raise InvalidUsageError(redis_error[500],500)
 
     @staticmethod
     def update_cart(user_name,product_id,quantity):
         is_product_present = False
         try:
+            quantity = int(quantity)
+            product_id = int(product_id)
             book_data = ProductData.query.filter_by(pid = product_id).first()
             if book_data.quantity < quantity:
                 return cart_quantity[400],400
@@ -175,7 +190,8 @@ class DataBase:
                 if each_book['book_id'] == product_id:
                     is_product_present = True
                     each_book["quantity"] = quantity
-                    price = each_book["price"]
+                    price = book_data.price
+                    # price = each_book["price"]
                     each_book["price"] = price * quantity
             price = DataBase.calculate_price(list_of_books)
             list_of_books.append({"total-Price" : price})
@@ -184,13 +200,19 @@ class DataBase:
             redis.expire('books_data' ,(24*60*60))
             if is_product_present:
                 return list_of_books,200
-            return cart[400],400
+            return response[400],400
         except (InvalidRequestError,OperationalError,CompileError):
             raise InvalidUsageError(sql[500], 500)
+        except (ConnectionError,TypeError):
+            raise InvalidUsageError(redis_error[500],500)
+        except ValueError:
+            raise InvalidUsageError(update_error[400],400)
 
     @staticmethod
     def display_cart(user_name):
         try:
+            if redis.exists('books_data'):
+                return json.loads(redis.get('books_data'))
             user = User.query.filter_by(username = user_name).first()
             list_of_books = DataBase.get_list_of_books(user)
             books =  DataBase.to_add_keys(list_of_books)
@@ -204,6 +226,8 @@ class DataBase:
             return books
         except (InvalidRequestError,OperationalError,CompileError):
             raise InvalidUsageError(sql[500], 500)
+        except (ConnectionError,TypeError):
+            raise InvalidUsageError(redis_error[500],500)
 
     @staticmethod
     def add_to_cart(user_name,book_id):
@@ -214,14 +238,13 @@ class DataBase:
                 user.cart.append(book_data)
                 db.session.commit()
                 redis.delete('books_data')
-                return cart[200]
-            return cart[400]
+                return make_response(response["added"],200)
+            return make_response(response[200],200)
         except FlushError:
-            raise InvalidUsageError(wishlist[400], 400)
+             return make_response(response[400],400)
         except (InvalidRequestError,OperationalError,CompileError):
             raise InvalidUsageError(sql[500], 500)
-
-
+    
     # static method for the sorting
     # for sort api
     @staticmethod
@@ -277,20 +300,23 @@ class DataBase:
             return books_with_keys
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)
+        except (ConnectionError,TypeError):
+            raise InvalidUsageError(redis_error[500],500)
 
 
     # static method to add user in db
     # for registration api
     @staticmethod
-    def add_user_to_db(user_name,email,password,mail_msg):
+    def add_user_to_db(user_name,email,password):
         try:
+            MailService.send_mail_with_link(user_name,email)
             hashed_password = generate_password_hash(password, method='sha256')
             new_user = User(username= user_name, email=email, password=hashed_password,confirmed = False)
             db.session.add(new_user)
             db.session.commit()
-            return make_response(jsonify({'response': mail_msg}),200)
+            return make_response(registration_response[200],200)
         except sqlalchemy.exc.IntegrityError:
-            return make_response(login[401],401)
+            return make_response(registration_response[409],409)
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)
 
@@ -302,10 +328,11 @@ class DataBase:
         try:
             user = User.query.filter_by(username=user_name).first()
             if user:
-                if user.confirmed:
-                    if check_password_hash(user.password, password):  
-                        return True
-            return False
+                if check_password_hash(user.password, password):
+                    if user.confirmed:
+                        return True,True
+                    return True,False
+            return False,False
         except (InvalidRequestError,OperationalError):
             raise InvalidUsageError(sql[500], 500)
             

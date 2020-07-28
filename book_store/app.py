@@ -1,7 +1,7 @@
 from flask import Flask,jsonify
 from dotenv import load_dotenv
 import os
-from services.error_handler_service import InvalidUsageError
+from services.error_handler_service import InvalidUsageError,errors
 from model.model import db
 from services.mail_service import mail
 from services.db_services import redis
@@ -10,10 +10,14 @@ from flask_jwt_extended import  JWTManager
 from flask_restful_swagger import swagger
 from flask_restful import Api
 from flask_redis import FlaskRedis
+from views.auth import reddis
+import logging
 
+# from .decorator import redii
+# redii.init_app(app)
 
 app = Flask(__name__)
-api = Api(app)
+api = Api(app,errors = errors)
 jwt = JWTManager(app)
 load_dotenv('bookenv/.env')
 
@@ -26,10 +30,11 @@ app.config['secret_key'] = os.getenv("secret_key")
 app.config['JWT_SECRET_KEY'] = os.getenv("jwt_secret_key")
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("connection")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['REDIS_URL'] = "redis://localhost:6379/0"
+app.config['REDIS_URL'] = os.getenv("redis_url")
+# logging.basicConfig(filename=  os.getenv("logger_file_path"))
 
 redis.init_app(app)
-
+reddis.init_app(app)
 mail.init_app(app)
 db.init_app(app)
 api = swagger.docs(Api(app),apiVersion='3.0',api_spec_url='/docs')
@@ -40,3 +45,7 @@ def handle_invalid_usage(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
+
+from views.cart_and_wishlist import redis
+redis.init_app(app)
+

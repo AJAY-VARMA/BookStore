@@ -46,3 +46,9 @@ class UserAddress(db.Model):
     address = db.Column(db.String(500))
     pincode = db.Column(db.Integer)
     order = db.relationship('OrderData',backref = 'address',uselist = False)
+
+class OrderWithProducts(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    order_id = db.Column(db.String(25),db.ForeignKey('order_data.orderid'))
+    product_id = db.Column(db.Integer,db.ForeignKey('product_data.pid'))
+    quantity = db.Column(db.Integer)

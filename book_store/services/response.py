@@ -37,6 +37,7 @@ registration_response = {
 }
 
 response = {
+
     "added": {
         "message" : "PRODUCT IS ADDED",
         "status" : 200
@@ -68,6 +69,10 @@ response = {
     "checkout" : {
         "message" : "ORDER PLACED SUCCESSFULLY ",
         "status" : 200
+    },
+    "quantity": {
+        "message" : "PRODUCT WITH QUANTITY IS NOT AVAILABLE",
+        "status" : 400
     }
 }
 

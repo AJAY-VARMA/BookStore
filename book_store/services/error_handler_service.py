@@ -11,13 +11,3 @@ class InvalidUsageError(Exception):  # custom exception class
         dict_['response'] = self.message
         dict_['status code'] = self.status_code
         return dict_
-
-class InternalServerError(Exception):
-    pass
-
-errors = {
-    "InternalServerError": {
-        "message": "Something went wrong",
-        "status": 500
-    }
-}

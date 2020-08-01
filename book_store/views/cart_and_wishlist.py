@@ -1,15 +1,12 @@
 from flask_restful import Resource
 from flask import request,jsonify,make_response
-from services.db_services import DataBase
+from services.db_services import DataBase,redis
 from flask_jwt_extended import jwt_required,get_jwt_identity
 from services.response import *
 from flask_restful_swagger import swagger
 from swag import jwt,product,quantity
 from redis.exceptions import ConnectionError
-# from decorator import check_token
 from flask_redis import FlaskRedis
-# from app import app
-redis = FlaskRedis()
 
 class Cart(Resource):
     @swagger.operation(notes = 'get cart',parameters = jwt)
@@ -24,7 +21,6 @@ class Cart(Resource):
         except ConnectionError :
             raise InvalidUsageError(redis_error[500],500)
             
-     
     @swagger.operation(notes = 'post cart',parameters = product)
     @jwt_required
     def post(self):
